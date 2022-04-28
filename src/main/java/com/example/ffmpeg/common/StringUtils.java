@@ -1,4 +1,4 @@
-package com.example.ffmpeg.m3u8;
+package com.example.ffmpeg.common;
 
 import java.math.BigDecimal;
 

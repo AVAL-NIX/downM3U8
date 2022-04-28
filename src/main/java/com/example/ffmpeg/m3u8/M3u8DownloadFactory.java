@@ -3,13 +3,15 @@ package com.example.ffmpeg.m3u8;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.io.IoUtil;
 import cn.hutool.http.HttpRequest;
+import com.example.ffmpeg.common.M3u8Exception;
+import com.example.ffmpeg.common.MediaFormat;
+import com.example.ffmpeg.common.StringUtils;
 import lombok.Data;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import java.io.*;
 import java.math.BigDecimal;
-import java.security.Security;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.*;
@@ -453,10 +455,6 @@ public class M3u8DownloadFactory {
      */
     public static M3u8Download getInstance(String downloadUrl) {
         return new M3u8Download(downloadUrl);
-    }
-
-    public static void destroied() {
-        m3u8Download = null;
     }
 
 }

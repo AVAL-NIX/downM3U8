@@ -1,4 +1,4 @@
-package com.example.ffmpeg.m3u8;
+package com.example.ffmpeg.common;
 
 
 public class M3u8Exception extends RuntimeException {

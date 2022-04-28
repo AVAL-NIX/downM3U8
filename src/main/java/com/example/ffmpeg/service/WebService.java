@@ -1,4 +1,4 @@
-package com.example.ffmpeg.hander;
+package com.example.ffmpeg.service;
 
 import com.example.ffmpeg.config.ConfigBean;
 import com.example.ffmpeg.m3u8.M3u8DownloadFactory;
@@ -7,18 +7,18 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 @Component
-public class WebHandler {
+@Slf4j
+public class WebService {
 
     @Autowired
     ConfigBean configBean;
 
     @Async
     public void exe(String code) {
-        System.out.println(" 通过线程执行 " + code);
         try {
             String requestUrl = configBean.fileSourcePath.replace("{code}", code);
             String outPath = configBean.fileOutPath.replace("{code}", code);
-            System.out.println(" 通过线程执行 " + code + ", " + requestUrl);
+            System.out.println(" 开始下载： " + code + ", " + requestUrl);
             M3u8DownloadFactory.M3u8Download m3u8Download = M3u8DownloadFactory.getInstance(requestUrl);
             //设置生成目录
             m3u8Download.setDir(outPath);
@@ -34,8 +34,8 @@ public class WebHandler {
             //开始下载
             m3u8Download.start();
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error(e);
+
         }
-        System.out.println(" 通过线程执行 OK" + code);
     }
 }

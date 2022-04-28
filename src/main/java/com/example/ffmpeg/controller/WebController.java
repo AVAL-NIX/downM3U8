@@ -1,7 +1,7 @@
 package com.example.ffmpeg.controller;
 
 
-import com.example.ffmpeg.hander.DownlandTask;
+import com.example.ffmpeg.service.WebService;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -9,7 +9,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/")
+@Slf4j
 public class WebController {
+
+    @Autowired
+    WebService webService;
 
     @RequestMapping("/codes/")
     public String inputCode(@RequestParam("codes") String codes){
@@ -17,10 +21,10 @@ public class WebController {
         try {
           String[] result = codes.split(",");
             for (String s : result) {
-                DownlandTask.WAIT_QUEUE.put(s.trim());
+                webService.exe(s);
             }
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            log.error(e);
             return "error";
         }
         return "ok";
