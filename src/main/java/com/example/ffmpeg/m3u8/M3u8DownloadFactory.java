@@ -1,14 +1,11 @@
 package com.example.ffmpeg.m3u8;
 
 import cn.hutool.core.io.FileUtil;
-import cn.hutool.core.io.IoUtil;
 import cn.hutool.http.HttpRequest;
-import com.example.ffmpeg.common.M3u8Exception;
-import com.example.ffmpeg.common.MediaFormat;
-import com.example.ffmpeg.common.StringUtils;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import java.io.*;
 import java.math.BigDecimal;
@@ -18,10 +15,12 @@ import java.util.concurrent.*;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Data
 public class M3u8DownloadFactory {
 
     static ReentrantLock lock = new ReentrantLock();
+
     private static M3u8Download m3u8Download;
 
     public static final String FILESEPARATOR = System.getProperty("file.separator");
@@ -73,8 +72,11 @@ public class M3u8DownloadFactory {
          * 开始下载视频
          */
         public void start() {
+            // 检查参数
             checkField();
+            // 获取TS url
             getTsUrl();
+            // 并行下载
             startDownload();
         }
 
@@ -106,13 +108,13 @@ public class M3u8DownloadFactory {
                         consume++;
                         BigDecimal bigDecimal = new BigDecimal(downloadBytes.toString());
                         Thread.sleep(interval);
-                        System.out.println("正在下载队列：");
+                        log.info("正在下载队列：");
                         for (String s : requestQueue) {
-                            System.out.println(s);
+                            log.info(s);
                         }
-                        System.out.println("已用时" + (System.currentTimeMillis() - beginTime) / 1000 + "秒！\t下载速度：" + StringUtils.convertToDownloadSpeed(new BigDecimal(downloadBytes.toString()).subtract(bigDecimal), 3) + "/s");
-                        System.out.println("\t已完成" + finishedCount + "个，还剩" + (tsSet.size() - finishedCount) + "个！");
-                        System.out.println(new BigDecimal(finishedCount).divide(new BigDecimal(tsSet.size()), 4, BigDecimal.ROUND_HALF_UP).multiply(new BigDecimal(100)).setScale(2, BigDecimal.ROUND_HALF_UP) + "%");
+                        log.info("已用时" + (System.currentTimeMillis() - beginTime) / 1000 + "秒！");
+                        log.info("\t已完成" + finishedCount + "个，还剩" + (tsSet.size() - finishedCount) + "个！");
+                        log.info(new BigDecimal(finishedCount).divide(new BigDecimal(tsSet.size()), 4, BigDecimal.ROUND_HALF_UP).multiply(new BigDecimal(100)).setScale(2, BigDecimal.ROUND_HALF_UP) + "%");
 
                     } catch (InterruptedException e) {
                         e.printStackTrace();
@@ -130,12 +132,12 @@ public class M3u8DownloadFactory {
                         e.printStackTrace();
                     }
                 }
-                System.out.println("下载完成，正在合并文件！共" + finishedFiles.size() + "个！" + StringUtils.convertToDownloadSpeed(downloadBytes, 3));
+                log.info("下载完成，正在合并文件！共" + finishedFiles.size() + "个！");
                 //开始合并视频
                 mergeTs();
                 //删除多余的ts片段
                 deleteFiles();
-                System.out.println("视频合并完成，欢迎使用!");
+                log.info("视频合并完成，欢迎使用!");
             }).start();
         }
 
@@ -185,9 +187,9 @@ public class M3u8DownloadFactory {
         private void commonStar(List<String> commons) {
             try {
                 lock.lock();
-                System.out.println("CMD命令：" + fileName);
+                log.info("CMD命令：" + fileName);
 
-                System.out.println(org.apache.commons.lang3.StringUtils.join(commons, ""));
+                log.info(org.apache.commons.lang3.StringUtils.join(commons, ""));
 
                 Process exec = Runtime.getRuntime().exec(org.apache.commons.lang3.StringUtils.join(commons, ""));
 
@@ -219,7 +221,7 @@ public class M3u8DownloadFactory {
                     String line = null;
                     try {
                         while ((line = in.readLine()) != null) {
-                            System.out.println(" info " + line);
+                            log.info(" info " + line);
                         }
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -240,7 +242,7 @@ public class M3u8DownloadFactory {
                     String line = null;
                     try {
                         while ((line = err.readLine()) != null) {
-                            System.out.println(" error " + line);
+                            log.info(" error " + line);
                         }
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -281,7 +283,7 @@ public class M3u8DownloadFactory {
                 //xy为未解密的ts片段，如果存在，则删除
                 String filePath = dir + FILESEPARATOR + fileName + FILESEPARATOR + name;
                 File file2 = new File(filePath);
-                System.out.println(" 开始下载： " + urls + " , 文件路径：" + file2);
+                log.info(" 开始下载： " + urls + " , 文件路径：" + file2);
                 if (file2.exists())
                     file2.delete();
                 FileOutputStream outputStream1 = null;
@@ -300,15 +302,15 @@ public class M3u8DownloadFactory {
                         break;
                     } catch (Exception e) {
                         e.printStackTrace();
-                        System.out.println("第" + count + "获取链接重试！\t" + urls);
+                        log.info("第" + count + "获取链接重试！\t" + urls);
                         count++;
                     }
                 }
                 if (count > retryCount)
                     //自定义异常
-                    throw new M3u8Exception("10次重试失败，连接超时！");
+                    log.info("10次重试失败，连接超时！");
                 finishedCount++;
-                System.out.println(urls + "下载完毕！\t已完成" + finishedCount + "个，还剩" + (tsSet.size() - finishedCount) + "个！");
+                log.info(urls + "下载完毕！\t已完成" + finishedCount + "个，还剩" + (tsSet.size() - finishedCount) + "个！");
             });
         }
 
@@ -320,9 +322,8 @@ public class M3u8DownloadFactory {
         private void getTsUrl() {
             StringBuilder content = getUrlContent(DOWNLOADURL);
             //判断是否是m3u8链接
-            System.out.println(" 获取的到URL 内容： " + content);
             if (!content.toString().contains("#EXTM3U"))
-                throw new M3u8Exception(DOWNLOADURL + "不是m3u8链接！");
+                log.info(DOWNLOADURL + "不是m3u8链接！");
             String[] split = content.toString().split("\\n");
             String downUrl = "";
             boolean isKey = false;
@@ -335,8 +336,8 @@ public class M3u8DownloadFactory {
                 }
                 //如果含有此字段，则说明ts片段链接需要从第二个m3u8链接获取
                 if (s.contains(".m3u8")) {
-                    if (StringUtils.isUrl(s)) {
-                        System.out.println(" 第2个片段是HTTP URL ");
+                    if (isUrl(s)) {
+                        log.info(" 第2个片段是HTTP URL ");
                         return;
                     }
                     String relativeUrl = DOWNLOADURL.substring(0, DOWNLOADURL.lastIndexOf("/") + 1);
@@ -348,7 +349,7 @@ public class M3u8DownloadFactory {
             }
 
             if (StringUtils.isEmpty(downUrl))
-                throw new M3u8Exception("未发现下载链接！");
+                log.info("未发现下载链接！");
             //获取KEY
             getKey(downUrl, content);
         }
@@ -369,12 +370,12 @@ public class M3u8DownloadFactory {
                     content.append(new String(resultByte));
                     return content;
                 } catch (Exception e) {
-                    System.out.println("第" + count + "获取链接重试！\t" + urls);
+                    log.info("第" + count + "获取链接重试！\t" + urls);
                     count++;
                 }
             }
             if (count > retryCount)
-                throw new M3u8Exception("连接超时！");
+                log.info("连接超时！");
             return content;
         }
 
@@ -394,11 +395,24 @@ public class M3u8DownloadFactory {
                 String s = split[i];
                 if (s.contains("#EXTINF")) {
                     String s1 = split[++i];
-                    tsSet.put(StringUtils.isUrl(s1) ? s1 : mergeUrl(relativeUrl, s1), s1);
+                    tsSet.put(isUrl(s1) ? s1 : mergeUrl(relativeUrl, s1), s1);
                 }
             }
 
-            System.out.println(" tsSet : " + tsSet.size());
+            log.info(" ts要下载的数量 : " + tsSet.size());
+        }
+
+        /**
+         * 判断是不是URL
+         *
+         * @param str
+         * @return
+         */
+        public boolean isUrl(String str) {
+            if (StringUtils.isBlank(str))
+                return false;
+            str = str.trim();
+            return str.matches("^(http|https)://.+");
         }
 
 
@@ -406,18 +420,34 @@ public class M3u8DownloadFactory {
          * 字段校验
          */
         private void checkField() {
-            if ("m3u8".compareTo(MediaFormat.getMediaFormat(DOWNLOADURL)) != 0)
-                throw new M3u8Exception(DOWNLOADURL + "不是一个完整m3u8链接！");
-            if (threadCount <= 0)
-                throw new M3u8Exception("同时下载线程数只能大于0！");
-            if (retryCount < 0)
-                throw new M3u8Exception("重试次数不能小于0！");
-            if (timeoutMillisecond < 0)
-                throw new M3u8Exception("超时时间不能小于0！");
-            if (StringUtils.isEmpty(dir))
-                throw new M3u8Exception("视频存储目录不能为空！");
-            if (StringUtils.isEmpty(fileName))
-                throw new M3u8Exception("视频名称不能为空！");
+            if (DOWNLOADURL.indexOf(".m3u8") < 0) {
+                log.info(DOWNLOADURL + "不是一个完整m3u8链接！");
+                return;
+            }
+
+            if (threadCount <= 0) {
+                log.info("同时下载线程数只能大于0！");
+                return;
+            }
+            if (retryCount < 0) {
+                log.info("重试次数不能小于0！");
+                return;
+            }
+
+            if (timeoutMillisecond < 0) {
+                log.info("超时时间不能小于0！");
+                return;
+            }
+
+            if (StringUtils.isEmpty(dir)) {
+                log.info("视频存储目录不能为空！");
+                return;
+            }
+            if (StringUtils.isEmpty(fileName)) {
+                log.info("视频名称不能为空！");
+                return;
+            }
+
             finishedCount = 0;
             tsSet.clear();
             finishedFiles.clear();

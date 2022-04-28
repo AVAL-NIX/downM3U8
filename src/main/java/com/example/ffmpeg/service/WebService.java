@@ -2,6 +2,7 @@ package com.example.ffmpeg.service;
 
 import com.example.ffmpeg.config.ConfigBean;
 import com.example.ffmpeg.m3u8.M3u8DownloadFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
@@ -18,7 +19,6 @@ public class WebService {
         try {
             String requestUrl = configBean.fileSourcePath.replace("{code}", code);
             String outPath = configBean.fileOutPath.replace("{code}", code);
-            System.out.println(" 开始下载： " + code + ", " + requestUrl);
             M3u8DownloadFactory.M3u8Download m3u8Download = M3u8DownloadFactory.getInstance(requestUrl);
             //设置生成目录
             m3u8Download.setDir(outPath);
@@ -34,7 +34,7 @@ public class WebService {
             //开始下载
             m3u8Download.start();
         } catch (Exception e) {
-            log.error(e);
+            log.error("error ",e);
 
         }
     }
