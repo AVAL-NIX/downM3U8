@@ -1,9 +1,8 @@
 package com.example.ffmpeg.service;
 
-import com.example.ffmpeg.config.ConfigBean;
 import com.example.ffmpeg.m3u8.M3u8DownloadFactory;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
@@ -11,18 +10,25 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class WebService {
 
-    @Autowired
-    ConfigBean configBean;
+
+    @Value("${file.out.path}")
+    public String fileOutPath;
+
+    @Value("${file.source.path}")
+    public String fileSourcePath;
+
+    @Value("${file.ffmpeg.path}")
+    public String fileFfmpegPath;
 
     @Async
     public void exe(String code) {
         try {
-            String requestUrl = configBean.fileSourcePath.replace("{code}", code);
-            String outPath = configBean.fileOutPath.replace("{code}", code);
+            String requestUrl = fileSourcePath.replace("{code}", code);
+            String outPath = fileOutPath.replace("{code}", code);
             M3u8DownloadFactory.M3u8Download m3u8Download = M3u8DownloadFactory.getInstance(requestUrl);
             //设置生成目录
             m3u8Download.setDir(outPath);
-            m3u8Download.setFfmpegPath(configBean.fileFfmpegPath);
+            m3u8Download.setFfmpegPath(fileFfmpegPath);
             //设置视频名称
             m3u8Download.setFileName(code);
             //设置重试次数
