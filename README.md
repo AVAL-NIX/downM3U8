@@ -10,7 +10,9 @@
 ## 使用方式
 
 下载到本地地址：file.out.path=F:\\360Downloads\\mo
+
 下载地址： file.source.path=https://xxxxxx/m3u8/{code}/{code}.m3u8
+
 ffmpeg本地地址：file.ffmpeg.path=F:\\360Downloads\\mo\\ffmpeg\\bin\\ffmpeg
 
 请求方式: localhost:7888/codes/?codes=xxx
